@@ -1,0 +1,148 @@
+<!doctype html>
+<html>
+<head>
+	<title>Photo Mosaic Creation using CUDA</title>
+	<link rel="stylesheet" type="text/css" href="style/reset.css">
+	<link rel="stylesheet" type="text/css" href="style/style.css">
+  <link href='http://fonts.googleapis.com/css?family=Armata' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=PT+Sans' rel='stylesheet' type='text/css'>
+</head>
+<body>
+<div id="nav">
+	<ul>
+		<li><a href="index.html">Project Proposal</a></li>
+		<li><a href="checkpoint.html">Checkpoint Report</a></li>
+		<li><a href="final.html">Final Report</a></li>
+	</ul>
+</div>
+<div id="sidenav">
+	<ul>
+		<a href="#summary">Summary</a>
+		<a href="#background">Background</a>
+		<a href="#challenge">The Challenge</a>
+		<a href="#resources">Resources</a>
+		<a href="#goals">Goals and Deliverables</a>
+		<a href="#platform">Platform Choice</a>
+		<a href="#schedule">Proposed Schedule</a>
+	</ul>
+</div>
+<div id="content">
+	<div id="header">
+		Parallelization of Instagram Photomosaics and a Study of Photo Tile Reutilization
+		<div class="subtitle">15-418 Final Project by Stephanie Yeung (syeung1) and Tyler Hedrick (thedrick)</div>
+
+	</div>
+	<div id="summary">
+		<h1>Summary</h1>
+		<p>We plan on writing a photo mosaic creation tool using CUDA to do image computation on a GPU. This final product will accept an image as input, and use Instagram photos to construct a photo mosaic of the input image.</p>
+	</div>
+	<div id="background">
+		<h1>Background</h1>
+		<p>Instagram has a lot of publicly available photos, and with their many filters, these photos frequently take on a certain hue or a prevailing color. One popular way for people to display photos is to create one photo using a mosaic of much smaller photos where each smaller photos acts as a &ldquo;pixel&rdquo; in the overall photo. With the popularity of Instagram, we believe that we can make very high quality mosaics using publicly available photos.</p>
+		<p>As we have discussed before, photo computation can be done in parallel over the many individual pixels in a photo. With a mosaic, each sub-photo can be computed in parallel with the final result compiled together after all sub-photos have been computed. We can also benefit from parallelism by storing image data into separate caches which will contain those photos that match a given pattern, color, or brightness. Figure 1 shows an example of how we will cut up an input image into equal sized squares to create a mosaic.</p>
+		<div class="pictures">
+			<img src="img/input.png" alt="input" />
+			<img src="img/output.png" alt="output" />
+			<p>Figure 1: Slicing an input image to create a mosaic structure.</p>
+		</div>
+		<h2>Pseudo-Code</h2>
+		<pre>
+Load provided image
+    Slice image into squares of equal size
+    for each sub-image in parallel:
+        calculate some overall pattern for the image
+        for each stored photo in parallel:
+            compare photo patterns and update shared pattern-match percentage
+            cache data about each stored image?
+        syncthreads
+        add photo pixels to shared final image buffer
+    	</pre>
+	</div>
+	<div id="challenge">
+		<h1>The Challenge</h1>
+		<p>There is a lot of computation happening here. First of all we need to load the images into memory to process them. As we know from Project 2 this is a very bandwidth limited process. This is furthered by the fact that the photos requested from Instagram will most likely need to be downloaded locally to process which limits us to the speed of the network and Instagram&rsquo;s servers. We also have the issue of space as Instagram&rsquo;s database of images is far larger than we would ever hope to store in disk, let alone memory. We will need to come up with a method to process the images and store much smaller chunks of data to search through when doing our mosaic creation computation. Even going through this database will likely take a very long time, so we will need to find opportunities for caching when sub-photos with similar patterns come up. </p>
+		<h2>Potential Problems</h2>
+		<p>One potential issue we are concerned about is the speed at which the Instagram API responds. We hope to use &ldquo;recent&rdquo; photos in our mosaic, so the resulting image will be different each time, but this may not be possible with network delay. If this is the case we will need to store a large amount of photos somewhere on disk and access those instead. This poses a problem of storage and whether or not it is feasible to store such a large amount of photos on AWS. We may need to have a way that processes photos, stores information about them, and then simply stores the location of the photo on instagrams servers. This way we could do all of the photo computation very quickly, and only request photo downloads when we need to.</p>
+	</div>
+	<div id="resources">
+		<h1>Resources</h1>
+		<p>We plan on using the folloiwng resources in our project:i</p>
+		<ul>
+			<li>The Instagram API has both a REST interface, as well as Python and Ruby libraries. As we are both strong Python programmers, we plan on using the <a href="https://github.com/Instagram/python-instagram">Instagram Python Library</a></li>
+			<li>To make our program more cohesive, we hope to use the <a href="http://documen.tician.de/pycuda/">PyCUDA Library</a> to perform our GPU computation. If this ends up being an issue, or the 418-staff prefers we do GPU programming the way Project 2 was done, we will default to the C++ interface.</li>
+			<li>We well take full advantage of the Gates cluster machines in 5201 with NVIDIA GTX 680 GPU's to do our GPU computation</li>
+			<li>This <a href="http://www.youtube.com/watch?v=k5rdvW2a4NA">YouTube video</a> demonstrates what we hope to have our final project achieve. It will be a good benchmark for us as we continue to work on our project.</li>
+		</ul>
+	</div>
+	<div id="goals">
+		<h1>Goals and Deliverables</h1>
+		<p>Our goals for this project are as follows:</p>
+		<h2>Plan to Achieve</h2>
+		<ul>
+			<li>To implement a mosaic image renderer for a stock set of images that have been pre-downloaded</li>
+			<li>Parallelize our implementation to scale well which we defined as maximizing speedup based on the architecture's SPMD and SIMD instruction capabilities.
+		</ul>
+		<h2>Hope to Achieve</h2>
+		<ul>
+			<li>Uniqueness of sub-images (never use the same image twice in a mosaic output)</li>
+			<li>Dynamically grab images from Instagram to change the mosaic each run, and give back a mosaic containing very recent images</li>
+		</ul>
+		<h2>Demo</h2>
+		<p>We plan to demonstarte our final project by showing our program generate a mosaic image in real time during class</p>
+	</div>
+	<div id="platform">
+		<h1>Platform Choice</h1>
+		<p>We will be using the NVIDIA GPUs in Gates.</p>
+	</div>
+	<div id="schedule">
+		<h1>Schedule</h1>
+		<div id="scheduleTab">
+      <div class="week">
+      <div class="left">Week 1</div>
+      <div class="right">(4/7 - 4/13)</div>
+      <div class="details left"><em>Plan to achieve</em></div>
+      <div class="details right">In this first week we plan on finishing the proposal write up, coming up with the best language (Python / C++) to complete this project with, and familiarize ourselves with the image manipulation methods in the respective language and the Instagram API.</div>
+      <div class="details left"><em>What we actually achieved<em></div>
+      <div class="details right">In our first week we looked through all of the documentation for PyCUDA and the Instagram API, and we decided that Python would be the optimal language to work with since there were interfaces for both Instagram and CUDA</div>
+      </div>
+      <div class="week">
+      <div class="left">Week 2</div>
+      <div class="right">(4/14 - 4/20)</div>
+      <div class="left details"><em>Plan to achieve</em></div>
+      <div class="right details">As this is carnival week, we will set our expectation for completion relatively low to other weeks. By Wednesday 4/17 we hope to have a way to input images, cut that image into sections, and an interface to send that data to the GPU.</div>
+      <div class="left details"><em>What we actually achieved</em></div>
+      <div class="right details">This week was mostly spent enjoying carnival, but we did accomplish our goal by Wednesday. By Wednesday we had a way to slice an input image into multiple equal squares. We did not yet set up a way for this to interact with the GPU as we changed our schedule plans slightly. Instead of worrying about parallelizing the computation right away, we wanted to create a serial version of the program in Python first.</div>
+      </div>
+      <div class="week">
+      <div class="left">Week 3</div>
+      <div class="right">(4/21 - 4/27)</div>
+      <div class="left details"><em>Plan to achieve</em></div>
+      <div class="right details">This is the week we want to get a lot of heavy lifting done. By the end of this week (and the midpoint of the project timeline) we hope to have a way to compute image data from the images uploaded to the GPU, and a way to store that data. </div>
+      <div class="left details"><em>What we actually achieved</em></div>
+      <div class="right details">We have successfully completed a serial version of the program. In this we have populated a database of data relating to over 4500 images. This database is accessed to find best matches of an input image's pieces entirely sequentially. Example outputs of this program can be found on our <a href="checkpoint.html">Checkpoint Page</a></div>
+      </div>
+      <div class="week">
+      <div class="left">Week 4</div>
+      <div class="right">(4/28 - 5/4)</div>
+      <div class="left details"><em>Plan to achieve</em></div>
+      <div class="right details">By the end of week 4 we will have the GPU returning image results that match given patterns from our database of processed image data. We will come up with a way to compare these returned images to the cross section of the original image to visually inspect how well our algorithm is performing.</div>
+      </div>
+      <div class="week">
+      <div class="left">Week 5</div>
+      <div class="right">(5/5 - 5/11)</div>
+      <div class="left details"><em>Plan to achieve</em></div>
+      <div class="right details">We have left much less for this week as we expect as problems arise for our timeline to be pushed back. By the end of this week we want to have a final project completed. This includes the final steps of actually piecing our image back together (most likely done in parallel with access to a shared image buffer).</div>
+      </div>
+      <div class="week">
+      <div class="left">Week 6</div>
+      <div class="right">(5/12 - 5/13)</div>
+      <div class="left details"><em>Plan to achieve</em></div>
+      <div class="right details">A complete and polished project to present to the class on Monday.</div>
+      </div>
+    </div>
+	</div>
+</div>
+<script type="text/javascript" src="js/jquery-1.9.0.js"></script>
+<script type="text/javascript" src="js/animate.js"></script>
+</body>
+</html>

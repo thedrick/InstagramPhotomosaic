@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+	<title>Checkpoint Report</title>
+	<link rel="stylesheet" type="text/css" href="style/reset.css">
+	<link rel="stylesheet" type="text/css" href="style/style.css">
+  <link href='http://fonts.googleapis.com/css?family=Armata' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=PT+Sans' rel='stylesheet' type='text/css'>
+</head>
+<body>
+	<div id="nav">
+	<ul>
+		<li><a href="proposal.html">Project Proposal</a></li>
+		<li><a href="checkpoint.html">Checkpoint Report</a></li>
+		<li><a href="final.html">Final Report</a></li>
+	</ul>
+</div>
+<div id="sidenav">
+	<ul>
+		<a href="#summary">Updated Schedule</a>
+		<a href="#progress">Progress</a>
+		<a href="#newgoals">Updated Goals</a>
+		<a href="#preliminaryresults">Preliminary Results</a>
+		<a href="#concerns">Issues and Concerns</a>
+	</ul>
+</div>
+<div id="content">
+  <div id="summary">
+    <h1>Updated Schedule</h1>
+    <div id="scheduleTab">
+      <div class="week">
+      <div class="left">Week 4 - 4.5</div>
+      <div class="right">(4/28 - 5/1)</div>
+      <div class="left details"><em>Plan to achieve</em></div>
+      <div class="right details">Our midterm is Tuesday of this week, so we plan  to study.</div>
+      </div>
+      <div class="week">
+      <div class="left">Week 4.5 - 5</div>
+      <div class="right">(5/1 - 5/4)</div>
+      <div class="left details"><em>Plan to achieve</em></div>
+      <div class="right details">Since we didn't account for studying for the midterm in our original schedule, in this latter half of the week, we will implement a serial version for returning and actually piecing together the stock set of images into a mosaic that match the given patterns from our processed image data.</div>
+      </div>
+      <div class="week">
+      <div class="left">Week 5 - 5.5</div>
+      <div class="right">(5/5 - 5/8)</div>
+      <div class="left details"><em>Plan to achieve</em></div>
+      <div class="right details">After our serial implementation we will then move on to the more significant part of this project -parallelization. In this former half of the week, we plan to use PyCUDA to send our data to the GPU and find a way to effectively store it.</div>
+      </div>
+      <div class="week">
+      <div class="left">Week 5.5 - 6</div>
+      <div class="right">(5/12 - 5/13)</div>
+      <div class="left details"><em>Plan to achieve</em></div>
+      <div class="right details">This is where we will really optimize our implementation and work out bugs. Once we have a final debugged version, we will move on to our 'Hope to Achieve' task of dynamically grabbing the most recent Instagram photos.</div>
+      </div>
+    </div>
+  </div>
+  
+	<div id="progress">
+    <h1>Work Completed So Far</h1>
+    <p>It took unexpectedly long to install PyCUDA, but we have thus far been able to implement all of what we hoped to achieve in Week 2, which gives a way to input images and cut the image into square sections. We have also decided on a way to determine an &ldquo;image match&rdquo;, in which we will further divide each square section into a 3x3 grid and average the RGB values in each of those grid squares to find the closest match. This method would definitely be better than averaging all values in the larger squares, as we realized a split black and white block could return a grey average, which is not what we actually want.</p>
+    <p>Now in this week, we have used the method just described above and can now successfully find closest image matches for each square and stich them together to replicate the original image. We deviated from our original proposed schedule where we planned to work with the GPU earlier on, but our current track (reflected in our schedule) is definitely a better approach as we should implement a serial version <i>then</i> parallelize it.</p>
+  </div>
+
+  <div id="newgoals">
+    <h1>Goals and Deliverables</h1>
+		<p>Our goals have stayed largely the same from our proposal, which we are restating here. Note that we have moved one of our 'Hope to Achieve' goals to 'Plan to Achieve' as we are moving nicely along on schedule:</p>
+		<h2>Plan to Achieve</h2>
+		<ul>
+			<li>To implement a mosaic image renderer for a stock set of images that have been pre-downloaded</li>
+			<li>Parallelize our implementation to scale well which we defined as maximizing speedup based on the architecture's SPMD and SIMD instruction capabilities.
+			<li>Uniqueness of sub-images (never use the same image twice in a mosaic output)</li>
+		</ul>
+		<h2>Hope to Achieve</h2>
+		<ul>
+			<li>Dynamically grab images from Instagram to change the mosaic each run with most recent images</li>
+		</ul>
+		<h2>Demo</h2>
+		<p>We will demonstrate our final project by showing our program generate a mosaic image in real time</p>
+  </div>
+  <div id="preliminaryresults">
+    <h1>Preliminary Results</h1>
+    <p>It currently takes on average <b>0.6436 seconds</b> to find the closest image match, and an average of <b>122.536 seconds</b> to compose an image of <b>2601 images</b> from a pool of <b>4771 images</b>. The average time taken to find an image match decreases as images are found, because they are removed from the pool of possibilites once used. These are some of the mosaics we have rendered:</p>
+  </div>
+  <div class="checkpoint pictures">
+    <img src="img/jellyfish.jpg" alt="jellyfish" />
+    <img src="img/jellyfish_mosaic_unique.jpg" alt="jellyfishmosaic" />
+  </div>
+  <div class="checkpoint pictures">
+    <img src="img/girl.jpg" alt="girl" />
+    <img src="img/girl_mosaic_unique.jpg" alt="girlmosaic" />
+  </div>
+  <div class="checkpoint pictures">
+    <img src="img/shore.jpg" alt="shore" />
+    <img src="img/shore_mosaic_unique.jpg" alt="shoremosaic" />
+  </div>
+
+  <div id="concerns">
+    <h1>Issues and Concerns</h1>
+    <p>Though this will only be an issue if we reach our 'Hope to Achieve' goal of dynamically grabbing images from Instagram, we are concerned about the latency of those requests. Currently we have a large database of computed values for images that exist on disk, making it very easy for us to search through and find closest matches. If we are grabing photos from Instagram at runtime, we will still need to process them first before running the matching computation. This will dramatically reduce our speed, but is luckily another operation that is possible to do in parallel. Another concern we have is whether or not it makes sense to actually do image processing on the GPU since it will be very challenging to get a lot of image data on the GPUs memory efficiently.</p>
+  </div>
+  <br /><br /><br /><br /><br />
+</div>
+<script type="text/javascript" src="js/jquery-1.9.0.js"></script>
+<script type="text/javascript" src="js/animate.js"></script>
+</body>
+</html>
