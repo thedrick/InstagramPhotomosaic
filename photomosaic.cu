@@ -48,7 +48,8 @@ __global__ void kernelMatchImages() {
   int dist;
   int minIndex = 0;
   int minVal = INT_MAX;
-  for (int i = 0; i < (numImages * square(cutSize)); i += (cSizeSquared * 3)) {
+
+  for (int i = 0; i < (numImages * square(cutSize) * 3); i += (cSizeSquared * 3)) {
     dist = 0;
     for (int j = 0; j < (cSizeSquared * 3); j += 3) {
       int3 rgb1 = *(int3*)(&cuConstMosaicParams.imageAverages[imageAverageStart + j]);
@@ -95,28 +96,12 @@ CudaMosaic::~CudaMosaic() {
   delete [] imageIndex;
 }
 
-// void CudaMosaic::setAllAverages(int *averages) {
-//   for (int i = 0; i < (numImages * cutSize * cutSize * 3); i++) {
-//     allAverages[i] = averages[i]; 
-//   }
-// }
-
-// void CudaMosaic::setImageAverages(int *averages) {
-//   printf("Trying to set image averages\n");
-//   for (int i = 0; i < (numSlices * numSlices * cutSize * cutSize * 3); i++) {
-//     imageAverages[i] = averages[i];
-//   }
-// }
-
 const int* CudaMosaic::getIndices() {
   printf("Copying index data from device\n");
   cudaMemcpy(imageIndex,
              cudaDeviceImageIndex,
              sizeof(int) * numSlices * numSlices,
              cudaMemcpyDeviceToHost);
-  // for (int i = 0; i < numSlices * numSlices; i++) {
-  //   printf("Index %d found match at %d\n", i, imageIndex[i]);
-  // }
   cudaDeviceReset();
   return imageIndex;
 }
@@ -134,15 +119,9 @@ void CudaMosaic::setup(int ni, int ns, int cs, int* imgavg, int* allavg) {
   int i;
   for (i = 0; i < (numSlices * numSlices * cutSize * cutSize * 3); i++) {
     imageAverages[i] = imgavg[i];
-    // if (i % 100 == 0) {
-    //   printf("Setting image average %d for index %d\n", imageAverages[i], i);
-    // }
   }
   for (i = 0; i < (numImages * cutSize * cutSize * 3); i++) {
     allAverages[i] = allavg[i]; 
-    // if (i % 100 == 0) {
-    //   printf("Setting all average %d for index %d\n", allAverages[i], i);
-    // }
   }
 
   int deviceCount = 0;
