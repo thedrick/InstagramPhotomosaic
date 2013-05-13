@@ -65,6 +65,7 @@ Load provided image
   
   <div id="results">
     <h1>Results</h1>
+    <h2>Photomosaic Results</h2>
     <p>Now that our database now has over 100,000 images, our final results have improved in terms of aesthetics. In terms of other matters, such as serial computation time, the results have, unsurprisingly, significantly increased. However, given the <a href="checkpoint.html#preliminaryresults">preliminary results</a>, were obtained from the Python implementation, there was a natural speedup when switching to C++. It now takes on average <b>0.05 seconds</b> to find the closest image match, <b>130 seconds</b> to find all matches, and <b>5 seconds</b> to compose the final mosaic.</p>
     
     <p>When comparing our final mosiacs to our <a href="checkpoint.html#preliminaryresults">preliminary results</a>, we see a significant improvement in details and colors (click the mosaiced image on the right to view the full size image):</p>
@@ -87,7 +88,7 @@ Load provided image
   </div>
 
     <p>These tables show our speedups on various GPUs based on number of subimages we cut our image into:
-    <h2>51 x 51 = 2601 images</h2>
+    <h2>51 x 51 = 2,601 images</h2>
     <table>
       <tr>
         <th></th>
@@ -130,7 +131,7 @@ Load provided image
       </tr>
     </table><br />
     
-    <h2>102 x 102 = 10404 images</h2>
+    <h2>102 x 102 = 10,404 images</h2>
     <table>
       <tr>
         <th></th>
@@ -173,7 +174,7 @@ Load provided image
       </tr>
     </table><br />
     
-    <h2>204 x 204 = 41616 images</h2>
+    <h2>204 x 204 = 41,616 images</h2>
     <table>
       <tr>
         <th></th>
@@ -224,7 +225,10 @@ Load provided image
       <img src="graphs/graph_sms.jpg" class="cent" alt="Time vs SMs" />
     </p>
     
-    <p>Our best achieved speedup was 9.1x on the GTX 480. At first, it was curious as to why our best speedup wasn't on the GTX 680s, but we realized since our operations are computationally intensive, they benefitted more from the higher parallel capabilities from having more SMs, which are like ALUs.</p>
+    <p>Our best achieved speedup was 39.1x on the GTX 480. At first, it was curious as to why our best speedup wasn't on the GTX 680s, but we realized since our operations are computationally intensive, they benefitted more from the higher parallel capabilities from having more SMs, which are like ALUs.</p>
+
+    <h2>Tile Reuse</h2>
+    <p>While creating our mosaics, we studied the possibility of reusing the smaller tiles we cut each image into to recreate new images pixel for pixel. This could potentially save a lot of storage space if a lot of sliced tiles match pixel for pixel to the new tiles created in an input image. Our algorithm is built on using 3 x 3 pixel tiles, so we decided to look at these first. The image of us eating ice cream in our results section has enough of a black border on it that over 20% of the image can be made from the same black tile. The jellyfish image on the other hand, had 0 matches to the almost 1,000,000 stored tiles in our database. We then considered the probability of two tiles matching: Two tiles with 9 RGB values each have a probaility of 1/(256*256*256*3*9) chance of matching since each of the 3 RGB values take on 1 of 256 possible values, and there are 9 RGB values per tile. This is an extremely low possibility to the point where it is so unlikely to happen that storing the tiles would not be beneficial to storage. Any smaller tile size would not offer any benefit to storage as they aren't large enough to offset the original cost of storage, and any larger tile size would have an even smaller probability of exactly matching. Thus, it is clear that any tiles besides pure black and pure white would not be helpful.</p>
   
   <div id="studentwork">
     <h1>Division of Work</h1>
