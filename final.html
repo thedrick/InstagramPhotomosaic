@@ -1,0 +1,240 @@
+
+<!doctype html>
+<html>
+<head>
+  <title>Final Report</title>
+  <link rel="stylesheet" type="text/css" href="style/reset.css">
+  <link rel="stylesheet" type="text/css" href="style/style.css">
+  <link href='http://fonts.googleapis.com/css?family=Armata' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=PT+Sans' rel='stylesheet' type='text/css'>
+</head>
+<body>
+  <div id="nav">
+  <ul>
+    <li><a href="proposal.html">Project Proposal</a></li>
+    <li><a href="checkpoint.html">Checkpoint Report</a></li>
+    <li><a href="final.html">Final Report</a></li>
+  </ul>
+</div>
+<div id="content">
+  <div id="header">
+    Parallelization of Instagram Photomosaics and a Study of Photo Tile Reutilization
+    <div class="subtitle">15-418 Final Project by Stephanie Yeung (syeung1) and Tyler Hedrick (thedrick)</div>
+  </div>
+  <div id="finalsummary">
+    <h1>Summary</h1>
+    <p>We have implemented a parallel program to create photomosaics using Instagram photos, and have explored how to reuse data in the subtiles to save image storage space.</p>
+  </div>
+  <div id="background">
+    <h1>Background</h1>
+    <p>Instagram has a huge database of photos, many of which have filters applied that give them a similar hue, saturation, brightness, etc. Photomosaics are a popular way to display a photo using many subphotos where each subphoto acts as a "pixel" in the overall image. Photomosiacs of Instagram photos could be very intersting, and with the filters applied, make very high quality photomosaics. This also brought out another topic to be explored in the form of data compression. Professor Kayvon challenged us with trying to find out if new images uploaded to Instagram could use old image data to recreate this new image pixel for pixel without storing any new data.</p>
+
+    <p>Photomosaics are trivially parallelizable because each subimage of an input image can be done in parallel. If you include the requirement that each photo tile must be unique, things become a bit trickier, as modifying an array of images while other threads are accessing them can still produce duplicate images. When creating photomosaics for aesthetics it is much better to remove duplicates as it provides a much more interesting result. When figuring out whether or not it is possible to find an image that matches pixel for pixel, having duplicates is necessary to ensure we consider all images in the database.</p>
+
+    <img src="img/zoompixel.png" alt="zoompixel" /><span class="cent">Figure 1: A diagram of how we split up the pixels in our image and tiles</span>
+
+    <p>The next challenge comes from determining the best number of pieces to cut the image and subimages into to match to. We started with cutting the input image into 51 x 51 subimages and subimage tile into another 3 x 3 grid. When we started looking for exact matches, we realized that cutting the overall image into a much larger number of subimages would increase the probability that an exact match could be found. We have currently run matches on subimages with size 3 x 3 with very high success rate in finding exact matches. We plan to expand this to different dimensions to see which ones return the best results.</p>
+
+    <h2>High Level Algorithm</h2>
+    <pre>
+Load provided image
+    Slice image into squares of equal size
+    for each sub-image in parallel:
+        slice sub-image into grid
+        store average RGB values of grid pieces into an array
+        for each stored photo in parallel:
+            compare RGB values with grid and update current best match
+        syncthreads
+        add photo pixels to shared final image buffer
+    </pre>
+  </div>
+  
+  <div id="approach">
+    <h1>Approach</h1>
+    <p>We originally planned to use Python for this project (see <a href="proposal.html">proposal</a>), and parallelize the computations for image matches using PyCUDA, but ran into quite a few roadblocks on that path. Our serial Python version of generating image mosaics with a database of ~6,000 images required over 3 minutes of computation time. We realized this time would only grow exponentially if we wanted to use a database of over 100,000 images. We decided to continue for the time being and utilize PyCUDA to start attempting to speed up the implementation before adding any more images. After reading extensive documentation and &ldquo;successfully&rdquo; running our code, the result we achieved was crashing our computer. At this point, we decided to start from scratch with C++.</p>
+    
+    <p>The work required to partition our images is done within our <code>imageSlicer</code> class, which utilizes the <a href="http://imagemagick.org">ImageMagick</a> library for image manipulation. This class defines functions that slice the input image into subimages, and divides these subimages into the grids that we average over for image matching. Each of these grid tiles is then averaged into one (R,G,B) value, giving us multiple data points per subimage to find the overall closest match. We are currently exploring the best grid size to maximize match and minimize overhead. 
+    </p>
+    
+    <p>The final mosaic is currently composed in <code>serial_pm</code>. Finding the closest (R,G,B) values is equivalent to finding the shortest path between one point and all other given points in 3D space. For each subimage, we calculate the closest match from our image database, given by &radic;((r<sub>1</sub> - r<sub>2</sub>)<sup>2</sup> + (g<sub>1</sub> - g<sub>2</sub>)<sup>2</sup> + (b<sub>1</sub> - b<sub>2</sub>)<sup>2</sup>).  To ensure uniqueness in our images, as we discussed earlier, we remove an image from the database whenever it has been found as a closest match. In this serial version, we find all image matches first and then montage the images with the returned paths. We first used ImageMagick's <a href="http://www.imagemagick.org/Magick++/Montage.html">Montage class</a> to tile the images.</p>
+
+    <p>The first optimization was to write our own image tiler using <a href="http://libjpeg.sourceforge.net/">libjpeg</a>, since ImageMagick's class is not user-parallelizable and carried unneeded features. Our new image tiler class accepts an image path and an index integer indicating its position in the final mosaic, so we don't have to write images serially.</p>
+    
+    <p>The next optimization was to parallelize finding closest matches for each subimage using CUDA. Given the CPU-intensive nature of finding matches, we hope to make these computations faster and achieve an even greater speedup. We will also look into reusing data for the images.</p>
+  </div>
+  
+  <div id="results">
+    <h1>Results</h1>
+    <p>Now that our database now has over 100,000 images, our final results have improved in terms of aesthetics. In terms of other matters, such as serial computation time, the results have, unsurprisingly, significantly increased. However, given the <a href="checkpoint.html#preliminaryresults">preliminary results</a>, were obtained from the Python implementation, there was a natural speedup when switching to C++. It now takes on average <b>0.05 seconds</b> to find the closest image match, <b>130 seconds</b> to find all matches, and <b>5 seconds</b> to compose the final mosaic.</p>
+    
+    <p>When comparing our final mosiacs to our <a href="checkpoint.html#preliminaryresults">preliminary results</a>, we see a significant improvement in details and colors (click the mosaiced image on the right to view the full size image):</p>
+    
+    <div class="final pictures">
+      <img src="img/jellyfish.jpg" alt="jellyfish" />
+      <img src="img/jellyfish_mosaic_unique.jpg" alt="jellyfishmosaic" />
+      <a href="img/output_jellyfish2.jpg" ><img src="img/output_jellyfish2_small.jpg" alt="jellyfishmosaic" /></a>
+    </div>
+    <div class="final pictures">
+      <img src="img/shore.jpg" alt="shore" />
+      <img src="img/shore_mosaic_unique.jpg" alt="shoremosaic" />
+      <a href="img/output_shore.jpg"><img src="img/output_shore_small.jpg" alt="shoremosaic" /></a>
+    </div>
+    <div class="final pictures">
+      <img src="img/icecream.jpg" alt="icecream" />
+      <img src="img/icecream_mosaic.jpg" alt="icecreammosaic" />
+      <a href="img/output_icecream.jpg"><img src="img/output_icecream_small.jpg" alt="icecreammosaic" /></a>
+    </div>
+  </div>
+
+    <p>These tables show our speedups on various GPUs based on number of subimages we cut our image into:
+    <h2>51 x 51 = 2601 images</h2>
+    <table>
+      <tr>
+        <th></th>
+        <th>Python Serial</th>
+        <th>C++ Serial</th>
+        <th>CUDA/GTX<br />480 <small>(15 SMs)</small></th>
+        <th>CUDA/GTX<br />650 <small>(2 SMs)</small></th>
+        <th>CUDA/GTX<br />670 <small>(7 SMs)</small></th>
+        <th>CUDA/GTX<br />680 <small>(8 SMs)</small></th>
+      </tr>
+     
+      <tr>
+        <th>All Matches (s)</th>
+        <td>4200</td>
+        <td>75.2</td>
+        <td>4.3</td>
+        <td>25.3</td>
+        <td>6.9</td>
+        <td>6.4</td>
+      </tr>
+      
+      <tr>
+        <th>Total Time* (s)</th>
+        <td>4220**</td>
+        <td>83.2</td>
+        <td>9.3</td>
+        <td>30.3</td>
+        <td>11.9</td>
+        <td>11.4</td>
+      </tr>
+      
+      <tr>
+        <th>Speedup</th>
+        <td>xx</td>
+        <td>1x</td>
+        <td>9.1x</td>
+        <td>2.7x</td>
+        <td>7.0x</td>
+        <td>7.3x</td>
+      </tr>
+    </table><br />
+    
+    <h2>102 x 102 = 10404 images</h2>
+    <table>
+      <tr>
+        <th></th>
+        <th>Python Serial</th>
+        <th>C++ Serial</th>
+        <th>CUDA/GTX<br />480 <small>(15 SMs)</small></th>
+        <th>CUDA/GTX<br />650 <small>(2 SMs)</small></th>
+        <th>CUDA/GTX<br />670 <small>(7 SMs)</small></th>
+        <th>CUDA/GTX<br />680 <small>(8 SMs)</small></th>
+      </tr>
+     
+      <tr>
+        <th>All Matches (s)</th>
+        <td></td>
+        <td>296</td>
+        <td>15.1</td>
+        <td>98.8</td>
+        <td>27.1</td>
+        <td>24.8</td>
+      </tr>
+      
+      <tr>
+        <th>Total Time* (s)</th>
+        <td></td>
+        <td>304</td>
+        <td>20.1</td>
+        <td>103.8</td>
+        <td>32.1</td>
+        <td>29.8</td>
+      </tr>
+      
+      <tr>
+        <th>Speedup</th>
+        <td>xx</td>
+        <td>1x</td>
+        <td>15.1x</td>
+        <td>2.9x</td>
+        <td>9.5x</td>
+        <td>10.2x</td>
+      </tr>
+    </table><br />
+    
+    <h2>204 x 204 = 41616 images</h2>
+    <table>
+      <tr>
+        <th></th>
+        <th>Python Serial</th>
+        <th>C++ Serial</th>
+        <th>CUDA/GTX<br />480 <small>(15 SMs)</small></th>
+        <th>CUDA/GTX<br />650 <small>(2 SMs)</small></th>
+        <th>CUDA/GTX<br />670 <small>(7 SMs)</small></th>
+        <th>CUDA/GTX<br />680 <small>(8 SMs)</small></th>
+      </tr>
+     
+      <tr>
+        <th>All Matches (s)</th>
+        <td></td>
+        <td>1180.7</td>
+        <td>25.4</td>
+        <td>169.4</td>
+        <td>46.0</td>
+        <td>42.0</td>
+      </tr>
+      
+      <tr>
+        <th>Total Time* (s)</th>
+        <td></td>
+        <td>1188.7</td>
+        <td>30.4</td>
+        <td>174.4</td>
+        <td>51.0</td>
+        <td>47.0</td>
+      </tr>
+      
+      <tr>
+        <th>Speedup</th>
+        <td>xx</td>
+        <td>1x</td>
+        <td>39.1x</td>
+        <td>6.8x</td>
+        <td>23.3x</td>
+        <td>25.3x</td>
+      </tr>
+    </table><br />
+    <small>* Additional 3 seconds to load remote database of images and 2 seconds to tile (5 for serial)<br />** Python tiled images in 18s</small></p>
+    
+    <p>
+      <h2>Graphs</h2>
+      <img src="graphs/graph_bar.jpg" class="cent" alt="Total Time for NxN Subimages" />
+      <img src="graphs/graph_speedup.jpg" class="cent" alt="Speedups" />
+      <img src="graphs/graph_sms.jpg" class="cent" alt="Time vs SMs" />
+    </p>
+    
+    <p>Our best achieved speedup was 9.1x on the GTX 480. At first, it was curious as to why our best speedup wasn't on the GTX 680s, but we realized since our operations are computationally intensive, they benefitted more from the higher parallel capabilities from having more SMs, which are like ALUs.</p>
+  
+  <div id="studentwork">
+    <h1>Division of Work</h1>
+    <p>We pair programmed and worked on this entire project together. Tyler handled more of the database and Instagram scripts and Stephanie worked with the image tiler. In fact we are currently sitting next to each other writing this. Here is a mosaiced picture of our beautiful faces :)
+    </p>
+    <p>
+      <img src="img/output_us.jpg" />
+    </p>
+  </div>
+  <br /><br /><br /><br /><br />
+</div>
+</body>
+</html>

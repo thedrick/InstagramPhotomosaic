@@ -1,0 +1,276 @@
+body {
+	background-color: #f0f0f0;
+}
+
+#content {
+	width: 65%;
+  max-width: 700px;
+	margin: 90px auto 0 auto;
+	font: 12px 'Armata','Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+h1 {
+	font: 24px 'Armata', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	margin: 10px 0;
+}
+
+h2 {
+	font: 18px 'Armata', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	margin: 8px 0 15px;
+}
+
+#header {
+	font: 28px 'Armata', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	margin-bottom: 20px;
+}
+.subtitle {
+	font: 18px 'PT Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	margin-top: 5px;
+}
+
+#goals ul {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+pre {
+	font: 14px 'Courier New', 'Courier';
+	line-height: 140%;
+}
+code {
+  font: 14px 'Courier New', 'Courier';
+}
+
+#nav {
+	z-index: 10;
+}
+
+#nav a {
+	z-index: 10;
+}
+
+#nav ul {
+	list-style: none;
+	width: 100%;
+	text-align: center;
+	background-color: #333;
+	position: fixed;
+	top: 0;
+	left: 0;
+	margin-left: 0;
+}
+
+#nav li {
+	display: inline-block;
+	margin: 15px 25px;
+	text-decoration: none;
+	color: white;
+}
+
+#nav a {
+	color: white;
+	text-decoration: none;
+	font: 16px 'Armata', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+p {
+	font: 14px 'PT Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	padding: 5px 0;
+	line-height: 150%;
+}
+
+#nav a:hover {
+	color: #00BF00;
+}
+
+.pictures {
+  display: block;
+	overflow: auto;
+	width: 815px;
+	margin: 0 auto;
+  padding: 0;
+  text-align: center;
+}
+
+.pictures img {
+	width: 250px;
+	height: 250px;
+	margin: 5px;
+}
+
+.pictures p {
+	text-align: center;
+}
+
+#sidenav a:first-child {
+	border-top: none;
+}
+
+#sidenav a {
+	display: block;
+	padding: 8px 0;
+	margin: 0;
+	border-bottom: 1px solid #ccc;
+	border-top: 1px solid #333;
+	text-align: center;
+	background: rgb(255,255,255); /* Old browsers */
+	background: -moz-linear-gradient(top,  rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,255,255,1)), color-stop(47%,rgba(246,246,246,1)), color-stop(100%,rgba(237,237,237,1))); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top,  rgba(255,255,255,1) 0%,rgba(246,246,246,1) 47%,rgba(237,237,237,1) 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top,  rgba(255,255,255,1) 0%,rgba(246,246,246,1) 47%,rgba(237,237,237,1) 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top,  rgba(255,255,255,1) 0%,rgba(246,246,246,1) 47%,rgba(237,237,237,1) 100%); /* IE10+ */
+	background: linear-gradient(to bottom,  rgba(255,255,255,1) 0%,rgba(246,246,246,1) 47%,rgba(237,237,237,1) 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ededed',GradientType=0 ); /* IE6-9 */
+	font: 15px 'Armata', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+#sidenav ul {
+	position: fixed;
+	top: 90px;
+	left: 20px;
+	background-color: white;
+	width: 200px;
+	background-color: #fff;
+	border-radius: 6px;
+	overflow: hidden;
+	border: 1px solid #333;
+	-moz-box-shadow: 0 1px 3px 0 #666;
+	-webkit-box-shadow: 0 1px 3px 0 #666;
+	box-shadow: 0 1px 3px 0 #666;
+}
+
+#sidenav a {
+	color: #333;
+}
+
+#sidenav a:hover {
+	color: #00AF00;
+background: rgb(229,229,229); /* Old browsers */
+background: -moz-linear-gradient(top,  rgba(229,229,229,1) 0%, rgba(246,246,246,1) 36%, rgba(201,201,201,1) 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(229,229,229,1)), color-stop(36%,rgba(246,246,246,1)), color-stop(100%,rgba(201,201,201,1))); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(top,  rgba(229,229,229,1) 0%,rgba(246,246,246,1) 36%,rgba(201,201,201,1) 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(top,  rgba(229,229,229,1) 0%,rgba(246,246,246,1) 36%,rgba(201,201,201,1) 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(top,  rgba(229,229,229,1) 0%,rgba(246,246,246,1) 36%,rgba(201,201,201,1) 100%); /* IE10+ */
+background: linear-gradient(to bottom,  rgba(229,229,229,1) 0%,rgba(246,246,246,1) 36%,rgba(201,201,201,1) 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e5e5e5', endColorstr='#c9c9c9',GradientType=0 ); /* IE6-9 */
+	overflow: hidden;
+}
+
+#sidenav a:first-child:active {
+	border-top-left-radius: 6px;
+	border-top-right-radius: 6px;
+}
+#sidenav a:first-child:hover {
+	border-top-left-radius: 6px;
+	border-top-right-radius: 6px;
+}
+#sidenav a:first-child:visited {
+	border-top-left-radius: 6px;
+	border-top-right-radius: 6px;
+}
+#sidenav a:first-child:link {
+	border-top-left-radius: 6px;
+	border-top-right-radius: 6px;
+}
+#sidenav a:last-child:hover {
+	border-bottom-right-radius: 6px;
+	border-bottom-left-radius: 6px;
+}
+#sidenav a:last-child:visited {
+	border-bottom-right-radius: 6px;
+	border-bottom-left-radius: 6px;
+}
+#sidenav a:last-child:link {
+	border-bottom-right-radius: 6px;
+	border-bottom-left-radius: 6px;
+}
+
+#scheduleTab .left {
+  background: #f0f0f0;
+  float: left;
+  width: 150px;
+  padding: 6px;
+}
+#scheduleTab .right {
+  float: right;
+  width: 520px;
+  padding: 6px;
+}
+.week {
+  display: block;
+  overflow: hidden;
+  padding: 15px 0;
+  border-bottom: 1px #333 solid;
+}
+.week:last-child {
+  border: none;
+  padding-bottom: 40px;
+}
+#scheduleTab > .details {
+  padding: 6px;
+  border: 0px;
+}
+.right.details {
+	line-height: 150%;
+}
+
+ul {
+	width: auto;
+	height: auto;
+	background-color: transparent;
+	text-align: left;
+	color: black;
+	list-style-type: square;
+	list-style: square;
+	margin-left: 20px;
+	z-index: 0;
+}
+
+li {
+	color: black;
+	font: 14px 'PT Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	line-height: 150%;
+	margin: 5px 0;
+	list-style-type: square;
+	list-style: square;
+	display: list-item;
+	z-index: 0;
+}
+
+a {
+	color: #009F00;
+	font: 14px 'PT Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	text-decoration: none;
+	z-index: 0;
+}
+
+ul a:hover {
+	color: #00BF00;
+}
+table {
+  border: 1px #222 solid;
+  margin: 8px auto 5px;
+}
+
+#studentwork img {
+	margin: 15px auto;
+	display: block; 
+}
+
+#background img {
+	display: block;
+	margin: 0 auto;
+}
+
+.cent {
+	display: block;
+	margin: 0 auto 20px auto;
+	text-align: center;
+}
+table {
+  margin-bottom: -8px;
+}
+th, td {
+  padding: 3px;
+  text-align: center;
+}
