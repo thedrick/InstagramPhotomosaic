@@ -6,7 +6,7 @@
 #include <climits>
 #include <list>
 #include <jpeglib.h>
-#include <GLUT/glut.h>
+#include <GL/gl.h>
 
 #include "photomosaic.h"
 #include "mongo/client/dbclient.h"
@@ -45,7 +45,7 @@ int read_jpeg_to_array(char *filename, int idx) {
   int i = 0;
 
   if (!infile) {
-    printf("Error opening file %s.\n", filename);
+    // printf("Error opening file %s.\n", filename);
     return -1;
   }
   /* set up all decompress and reading image */
@@ -101,7 +101,7 @@ int write_jpeg_to_file(char *filename) {
   FILE *outfile = fopen(filename, "wb");
 
   if (!outfile) {
-    printf("Error opening output file %s.\n", filename);
+    // printf("Error opening output file %s.\n", filename);
     return -1;
   }
 
@@ -130,24 +130,38 @@ int write_jpeg_to_file(char *filename) {
 
 
 int main(int argc, char** argv) {
-  if (argc < 3) {
-    printf("Please indicate the input image and save path\n");
+  if (argc < 5) {
+    printf("usage: <image path> <output path> <numSlices> <cutSize>\n");
     return 1;
   }
 
   // mosaic = new CudaMosaic(108560, 51, 3);
-
+  int cutSize = atoi(argv[4]);
+  int numSlices = atoi(argv[3]);
   raw_image = (unsigned char*)malloc(width*height*bytes_per_pixel*sizeof(char*));
 
-  ImageSlicer slicer(argv[1], 51, 3);
+  ImageSlicer slicer(argv[1], numSlices, cutSize);
   string savepath = argv[2];
 
-  DBClientConnection c;
-  c.connect("localhost");
+  string errmsg;
+  ConnectionString cs = ConnectionString::parse("ds061777.mongolab.com:61777", errmsg);
+  if (!cs.isValid()) {
+    cout << "error parsing url: " << errmsg << endl;
+    return 1;
+  }
+  boost::scoped_ptr<DBClientBase> conn(cs.connect(errmsg));
+  if (!conn) {
+    cout << "couldnt connect: " << errmsg << endl;
+    return 1;
+  }
+  conn->auth(BSON("user" << "thedrick" <<
+                  "userSource" << "photomosaic" <<
+                  "pwd" << "thedrick" <<
+                  "mechanism" << "MONGODB-CR"));
 
   vector <int> dbImageColors;
   vector <string> dbImageSources;
-  auto_ptr<DBClientCursor> cursor = c.query("instagram_photomosaic.image_pool_cpp", BSONObj());
+  auto_ptr<DBClientCursor> cursor = conn->query("photomosaic.image_pool", BSONObj());
   
   // load all the stuff from the database to check against.
   double dbstart = CycleTimer::currentSeconds();
@@ -181,7 +195,7 @@ int main(int argc, char** argv) {
   // mosaic->setup(108560, 51, 3);
 
   CudaMosaic* mosaic = new CudaMosaic();
-  mosaic->setup(108560, 51, 3, cudaImgAverages.data(), dbImageColors.data());
+  mosaic->setup(108560, numSlices, cutSize, cudaImgAverages.data(), dbImageColors.data());
 
   // mosaic->setImageAverages(cudaImgAverages.data());
   // mosaic->setAllAverages(dbImageColors.data());
@@ -194,8 +208,8 @@ int main(int argc, char** argv) {
   const int *result = mosaic->getIndices();
   // int *result = NULL;
 
-  vector<string> finalImages(51 * 51);
-  for (int i = 0; i < (51 * 51); i++) {
+  vector<string> finalImages(numSlices * numSlices);
+  for (int i = 0; i < (numSlices * numSlices); i++) {
     int idx = result[i];
     // printf("Final index was %d for %d\n", idx, i);
     if (idx > (int)dbImageSources.size()) {
@@ -209,9 +223,9 @@ int main(int argc, char** argv) {
   double montagestart = CycleTimer::currentSeconds();
   for (int n = 0; n < (int)finalImages.size(); n++) {
     string filename = finalImages[n];
-    if (n % 100 == 0) {
-      printf("Opening image %d at path %s\n", n, filename.c_str());
-    }
+    // if (n % 100 == 0) {
+    //   printf("Opening image %d at path %s\n", n, filename.c_str());
+    // }
     // Image mosaicImage(filename);
     // images.push_back(mosaicImage);
     char* writable = new char[filename.size() + 1];

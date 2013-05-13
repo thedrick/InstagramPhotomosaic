@@ -4,12 +4,12 @@ ImageSlicer.py and slice up a target image into sections
 used in image matching for creating photo mosaics
 */
 
+#include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 #include <climits>
 #include <list>
 #include <jpeglib.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include "mongo/client/dbclient.h"
 #include "CycleTimer.h"
 #include "imageSlicer.h"
@@ -73,7 +73,7 @@ int read_jpeg_to_array(char *filename, int idx) {
   int i = 0;
 
   if (!infile) {
-    printf("Error opening file %s.\n", filename);
+    // printf("Error opening file %s.\n", filename);
     return -1;
   }
   /* set up all decompress and reading image */
@@ -129,7 +129,7 @@ int write_jpeg_to_file(char *filename) {
   FILE *outfile = fopen(filename, "wb");
 
   if (!outfile) {
-    printf("Error opening output file %s.\n", filename);
+    // printf("Error opening output file %s.\n", filename);
     return -1;
   }
 
@@ -165,7 +165,6 @@ int main(int argc, char **argv) {
     cout << "usage: " << argv[0] << " <image path> <save path> <numSlices> <cutSize>\n";
     return 1;
   }
-  printf("IS ANYTHING EVEN HAPPENING?\n");
   // Allocate enough space for the output mosaic
   raw_image = (unsigned char*)malloc(width*height*bytes_per_pixel*sizeof(char*));
 
@@ -177,10 +176,23 @@ int main(int argc, char **argv) {
   string savepath = string(argv[2]);
 
   // Connect to the locally run database.
-  printf("Trying to connect to database\n");
-  DBClientConnection c;
-  c.connect("localhost");
-  printf("Connected to the database\n");
+  string errmsg;
+  ConnectionString cs = ConnectionString::parse("ds061777.mongolab.com:61777", errmsg);
+  if (!cs.isValid()) {
+    cout << "error parsing url: " << errmsg << endl;
+    return 1;
+  }
+  boost::scoped_ptr<DBClientBase> conn(cs.connect(errmsg));
+  if (!conn) {
+    cout << "couldnt connect: " << errmsg << endl;
+    return 1;
+  }
+  conn->auth(BSON("user" << "thedrick" <<
+                  "userSource" << "photomosaic" <<
+                  "pwd" << "thedrick" <<
+                  "mechanism" << "MONGODB-CR"));
+
+  auto_ptr<DBClientCursor> cursor = conn->query("photomosaic.image_pool", BSONObj());
 
   // Initialize vectors used in computation.
   vector <vector <RGB> > dbImageColors;
@@ -189,8 +201,6 @@ int main(int argc, char **argv) {
   vector <Image> images;
   list <Image> finalMontage;
 
-  auto_ptr<DBClientCursor> cursor = c.query("instagram_photomosaic.image_pool_cpp", BSONObj());
-  printf("Made the query\n");
   // load all the stuff from the database to check against.
   double dbstart = CycleTimer::currentSeconds();
   while (cursor->more()) {
@@ -246,17 +256,12 @@ int main(int argc, char **argv) {
         minVal = dist;
       }
     }
-    if (minVal > 1) {
-      // printf("Found a perfect Match! for tile %zu\n", i); 
-      // perfectMatchCount++;
-      printf("didn't find a perfect match\n");
-    } else {
-      perfectMatchCount++;
-    }
-    // } else if (minVal < 15) {
-    //   printf("Found a really close match %d for tile %zu\n", minVal, i);
+    // if (minVal > 1) {
+    //   // printf("Found a perfect Match! for tile %zu\n", i); 
+    //   // perfectMatchCount++;
+    //   printf("didn't find a perfect match\n");
     // } else {
-    //   printf("minVal is %d\n", minVal);
+    //   perfectMatchCount++;
     // }
     double subimageend = CycleTimer::currentSeconds();
     // if (i % 50 == 0) {
